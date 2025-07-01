@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <title>Home - Mutual Giveaway System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script>
+        // Theme toggle logic
+        document.addEventListener('DOMContentLoaded', function() {
+            const html = document.documentElement;
+            const themeBtn = document.getElementById('theme-toggle');
+            function setTheme(dark) {
+                if (dark) {
+                    html.classList.add('dark');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    html.classList.remove('dark');
+                    localStorage.setItem('theme', 'light');
+                }
+            }
+            // Default to dark
+            setTheme(localStorage.getItem('theme') !== 'light');
+            themeBtn.onclick = () => setTheme(!html.classList.contains('dark'));
+        });
+    </script>
+    <style>
+        body {
+            min-height: 100vh;
+            background: url('https://payhip.com/cdn-cgi/image/format=auto,width=1500/https://pe56d.s3.amazonaws.com/o_1inps6j3m1uvjf15o3fp61o3o10.png') no-repeat center center fixed;
+            background-size: cover;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+    <div class="w-full max-w-4xl min-h-[5vh] mx-auto p-10 flex flex-col items-center justify-center">
+        <div class="w-full flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+            <div>
+                <div class="text-3xl font-extrabold text-white mb-2 drop-shadow">Welcome, <%= user ? user.username : 'User' %></div>
+                <div class="flex flex-wrap gap-2">
+                    <a href="/dashboard" class="<%= page === 'dashboard' ? 'bg-blue-600 bg-opacity-80 text-white' : 'bg-gray-700 bg-opacity-80 text-white' %> rounded-full px-5 py-1 text-base font-semibold shadow hover:bg-blue-700 transition">Home</a>
+                    <a href="/pending" class="<%= page === 'pending' ? 'bg-blue-600 bg-opacity-80 text-white' : 'bg-gray-700 bg-opacity-80 text-white' %> rounded-full px-5 py-1 text-base font-semibold shadow hover:bg-gray-800 transition">Requests</a>
+                    <a href="/schedule" class="<%= page === 'schedule' ? 'bg-blue-600 bg-opacity-80 text-white' : 'bg-gray-700 bg-opacity-80 text-white' %> rounded-full px-5 py-1 text-base font-semibold shadow hover:bg-gray-800 transition">Schedule</a>
+                    <a href="/logs" class="<%= page === 'logs' ? 'bg-blue-600 bg-opacity-80 text-white' : 'bg-gray-700 bg-opacity-80 text-white' %> rounded-full px-5 py-1 text-base font-semibold shadow hover:bg-blue-700 transition">Logs</a>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4 mt-4 md:mt-0">
+                <% if (user && user.avatar) { %>
+                    <img src="https://cdn.discordapp.com/avatars/<%= user.id %>/<%= user.avatar %>.png" alt="User" class="rounded-full w-14 h-14 border-4 border-indigo-400 shadow-lg">
+                <% } else { %>
+                    <span class="material-icons text-gray-400 w-14 h-14 rounded-full bg-gray-700 flex items-center justify-center">person</span>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- Widget Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full">
+            <!-- Giveaways Stat Widget -->
+            <div class="bg-white bg-opacity-20 backdrop-blur-lg rounded-2xl shadow-2xl p-8 flex flex-col items-start border border-white border-opacity-10 hover:scale-105 transition-transform duration-200">
+                <div class="flex items-center mb-2">
+                    <span class="material-icons text-blue-500 mr-2 drop-shadow">card_giftcard</span>
+                    <span class="font-semibold text-lg text-white drop-shadow">Total Giveaways</span>
+                </div>
+                <div class="text-5xl font-extrabold text-white mb-1 drop-shadow" id="totalGiveaways">0</div>
+                <div class="text-gray-200">All-time</div>
+            </div>
+            <!-- Pending Giveaways Widget -->
+            <div class="bg-white bg-opacity-20 backdrop-blur-lg rounded-2xl shadow-2xl p-8 flex flex-col items-start border border-white border-opacity-10 hover:scale-105 transition-transform duration-200">
+                <div class="flex items-center mb-2">
+                    <span class="material-icons text-yellow-400 mr-2 drop-shadow">hourglass_empty</span>
+                    <span class="font-semibold text-lg text-white drop-shadow">Pending Giveaways</span>
+                </div>
+                <div class="text-5xl font-extrabold text-white mb-1 drop-shadow" id="pendingGiveaways">0</div>
+                <div class="text-gray-200">Awaiting approval</div>
+            </div>
+            <!-- Scheduled Giveaways Widget -->
+            <div class="bg-white bg-opacity-20 backdrop-blur-lg rounded-2xl shadow-2xl p-8 flex flex-col items-start border border-white border-opacity-10 hover:scale-105 transition-transform duration-200">
+                <div class="flex items-center mb-2">
+                    <span class="material-icons text-indigo-400 mr-2 drop-shadow">event</span>
+                    <span class="font-semibold text-lg text-white drop-shadow">Scheduled</span>
+                </div>
+                <div class="text-5xl font-extrabold text-white mb-1 drop-shadow" id="scheduledGiveaways">0</div>
+                <div class="text-gray-200">Upcoming</div>
+            </div>
+        </div>
+        <!-- Daily Ping Limits, Server Stats, and Bot Stats in one row -->
+        <div class="w-full flex flex-col md:flex-row gap-8 mt-8 justify-center items-stretch">
+            <!-- Daily Ping Limits Widget -->
+            <div class="bg-white bg-opacity-20 backdrop-blur-lg rounded-2xl shadow-2xl p-6 flex flex-col items-start border border-white border-opacity-10 max-w-xs w-full mx-auto">
+                <div class="flex items-center mb-2">
+                    <span class="material-icons text-pink-400 mr-2 drop-shadow">campaign</span>
+                    <span class="font-semibold text-lg text-white drop-shadow">Daily Ping Limits</span>
+                </div>
+                <div class="w-full mt-2">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-white font-semibold flex items-center"><span class="material-icons text-blue-400 mr-1">record_voice_over</span> Everyone</span>
+                        <span class="bg-blue-600 text-white rounded-full px-4 py-1 font-bold text-lg shadow flex items-center justify-center" style="min-width:48px;">1 <span class="text-base font-normal ml-1">/ day</span></span>
+                    </div>
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-white font-semibold flex items-center"><span class="material-icons text-yellow-400 mr-1">volume_up</span> Here</span>
+                        <span class="bg-yellow-400 text-gray-900 rounded-full px-4 py-1 font-bold text-lg shadow flex items-center justify-center" style="min-width:48px;">2 <span class="text-base font-normal ml-1">/ day</span></span>
+                    </div>
+                </div>
+                <div class="mt-4 text-gray-300 text-sm">Limits reset daily at midnight (AEST).<br>Mutual Ping & No Ping have no limits.</div>
+            </div>
+            <!-- Server Stats Card (Modernized) -->
+            <div class="bg-white bg-opacity-20 backdrop-blur-lg rounded-2xl shadow-2xl p-6 flex flex-col items-start border border-white border-opacity-10 max-w-xs w-full mx-auto">
+                <div class="flex items-center mb-4">
+                    <span class="material-icons text-blue-400 mr-2 drop-shadow">groups</span>
+                    <span class="font-semibold text-lg text-white drop-shadow">Server Stats</span>
+                </div>
+                <div class="w-full flex items-center justify-between mt-2">
+                    <span class="text-gray-200 font-semibold flex items-center"><span class="material-icons text-blue-300 mr-1">group</span> Members</span>
+                    <span class="bg-blue-500 text-white rounded-full px-4 py-1 font-bold text-lg shadow flex items-center justify-center" id="serverMembers2" style="min-width:48px;">0</span>
+                </div>
+            </div>
+            <!-- Bot Stats Card (Modernized) -->
+            <div class="bg-white bg-opacity-20 backdrop-blur-lg rounded-2xl shadow-2xl p-6 flex flex-col items-start border border-white border-opacity-10 max-w-xs w-full mx-auto">
+                <div class="flex items-center mb-4">
+                    <span class="material-icons text-green-400 mr-2 drop-shadow">memory</span>
+                    <span class="font-semibold text-lg text-white drop-shadow">Bot Status</span>
+                </div>
+                <div class="w-full flex items-center justify-between mt-2">
+                    <span class="text-gray-200 font-semibold flex items-center"><span class="material-icons text-green-300 mr-1">schedule</span> Uptime</span>
+                    <span class="bg-green-500 text-white rounded-full px-4 py-1 font-bold text-lg shadow flex items-center justify-center" id="botUptime2" style="min-width:48px;">0d 0h 0m</span>
+                </div>
+            </div>
+        </div>
+        <!-- Statistics Widget (Chart) below, full width -->
+        <div class="mt-10 bg-white bg-opacity-20 backdrop-blur-lg rounded-2xl shadow-2xl p-8 flex flex-col items-start border border-white border-opacity-10 w-full hover:scale-105 transition-transform duration-200">
+            <div class="flex items-center mb-2">
+                <span class="material-icons text-green-400 mr-2 drop-shadow">insights</span>
+                <span class="font-semibold text-lg text-white drop-shadow">Giveaways Per Month</span>
+            </div>
+            <canvas id="giveawaysChart" height="100"></canvas>
+        </div>
+    </div>
+
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Example: Fetch and update stats dynamically
+        async function loadDashboardStats() {
+            const res = await fetch('/api/dashboard-stats');
+            const stats = await res.json();
+            document.getElementById('totalGiveaways').textContent = stats.totalGiveaways;
+            document.getElementById('pendingGiveaways').textContent = stats.pendingGiveaways;
+            document.getElementById('scheduledGiveaways').textContent = stats.scheduledGiveaways;
+            if (stats.serverMembers !== undefined) {
+                document.getElementById('serverMembers2').textContent = stats.serverMembers;
+            }
+            if (stats.botUptime !== undefined) {
+                document.getElementById('botUptime2').textContent = stats.botUptime;
+            }
+        }
+        document.addEventListener('DOMContentLoaded', loadDashboardStats);
+
+        // Example Chart.js for Giveaways Per Month
+        document.addEventListener('DOMContentLoaded', async function() {
+            let monthData = [5, 8, 6, 10, 12, 7, 9, 11, 8, 6, 7, 10]; // fallback
+            try {
+                const res = await fetch('/api/giveaways-per-month');
+                const data = await res.json();
+                if (data.months && Array.isArray(data.months)) {
+                    monthData = data.months;
+                }
+            } catch (e) {}
+            new Chart(document.getElementById('giveawaysChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    datasets: [{
+                        label: 'Giveaways',
+                        data: monthData,
+                        backgroundColor: '#6366f1',
+                        borderRadius: 8,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, grid: { color: '#23272a' } }, x: { grid: { color: '#23272a' } } }
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

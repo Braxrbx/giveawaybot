@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <title>Quotas - Mutual Giveaway System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        body {
+            min-height: 100vh;
+            background: url('https://payhip.com/cdn-cgi/image/format=auto,width=1500/https://pe56d.s3.amazonaws.com/o_1inps6j3m1uvjf15o3fp61o3o10.png') no-repeat center center fixed;
+            background-size: cover;
+        }
+        .debug {
+            background: rgba(0,0,0,0.7);
+            color: #fff;
+            font-size: 0.9em;
+            padding: 1em;
+            border-radius: 1em;
+            margin-top: 1em;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+    <div class="w-full max-w-4xl min-h-[5vh] mx-auto p-10 flex flex-col items-center justify-center">
+        <div class="w-full flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+            <div>
+                <div class="text-3xl font-extrabold text-white mb-2 drop-shadow">Staff Quotas</div>
+                <div class="flex flex-wrap gap-2">
+                    <a href="/dashboard" class="<%= page === 'dashboard' ? 'bg-blue-600 bg-opacity-80 text-white' : 'bg-gray-700 bg-opacity-80 text-white' %> rounded-full px-5 py-1 text-base font-semibold shadow hover:bg-blue-700 transition">Home</a>
+                    <a href="/pending" class="<%= page === 'pending' ? 'bg-blue-600 bg-opacity-80 text-white' : 'bg-gray-700 bg-opacity-80 text-white' %> rounded-full px-5 py-1 text-base font-semibold shadow hover:bg-gray-800 transition">Requests</a>
+                    <a href="/schedule" class="<%= page === 'schedule' ? 'bg-blue-600 bg-opacity-80 text-white' : 'bg-gray-700 bg-opacity-80 text-white' %> rounded-full px-5 py-1 text-base font-semibold shadow hover:bg-gray-800 transition">Schedule</a>
+                    <a href="/logs" class="<%= page === 'logs' ? 'bg-blue-600 bg-opacity-80 text-white' : 'bg-gray-700 bg-opacity-80 text-white' %> rounded-full px-5 py-1 text-base font-semibold shadow hover:bg-blue-700 transition">Logs</a>
+                    <a href="/quotas" class="<%= page === 'quotas' ? 'bg-blue-600 bg-opacity-80 text-white' : 'bg-gray-700 bg-opacity-80 text-white' %> rounded-full px-5 py-1 text-base font-semibold shadow hover:bg-gray-800 transition">Quotas</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass w-full p-8 rounded-2xl shadow-2xl border border-white border-opacity-10">
+            <div class="text-xl font-semibold mb-4 text-white flex items-center gap-2">
+                <span class="material-icons text-indigo-400">groups</span>
+                Staff Quotas
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left text-gray-200">
+                    <thead>
+                        <tr class="border-b border-gray-700">
+                            <th class="px-4 py-2">Staff</th>
+                            <th class="px-4 py-2">Giveaways</th>
+                            <th class="px-4 py-2">Invites</th>
+                            <th class="px-4 py-2">Quota Met</th>
+                        </tr>
+                    </thead>
+                    <tbody id="quotaTableBody">
+                        <tr><td colspan="4" class="text-center py-6 text-gray-400">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="quotaError" class="text-red-400 text-center mt-4 hidden"></div>
+            <div id="quotaDebug" class="debug hidden"></div>
+        </div>
+    </div>
+
+    <script>
+        async function fetchQuotas() {
+            const tableBody = document.getElementById('quotaTableBody');
+            const errorDiv = document.getElementById('quotaError');
+            const debugDiv = document.getElementById('quotaDebug');
+            errorDiv.classList.add('hidden');
+            debugDiv.classList.add('hidden');
+            try {
+                const response = await fetch('/api/staff/quotas');
+                let quotas;
+                let text = await response.text();
+                try { quotas = JSON.parse(text); } catch (e) { quotas = null; }
+                debugDiv.textContent = 'Raw API response:\n' + text;
+                debugDiv.classList.remove('hidden');
+                if (!response.ok) {
+                    errorDiv.textContent = 'API error: ' + (quotas && quotas.error ? quotas.error : response.statusText);
+                    errorDiv.classList.remove('hidden');
+                    tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-6 text-red-400">API error.</td></tr>';
+                    return;
+                }
+                if (!Array.isArray(quotas) || quotas.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-6 text-gray-400">No staff quotas found.</td></tr>';
+                    return;
+                }
+                tableBody.innerHTML = quotas.map(quota => `
+                    <tr class="border-b border-gray-700">
+                        <td class="px-4 py-2 flex items-center">
+                            <img src="${quota.avatar || ''}" alt="${quota.username || ''}" class="w-8 h-8 rounded-full mr-2">
+                            ${quota.username || quota.id || 'Unknown'}
+                        </td>
+                        <td class="px-4 py-2">${quota.giveawayCount ?? '?'}</td>
+                        <td class="px-4 py-2">${quota.inviteCount ?? '?'}</td>
+                        <td class="px-4 py-2">${quota.quotaMet ? '✅' : '❌'}</td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                errorDiv.textContent = 'Error fetching quotas: ' + error;
+                errorDiv.classList.remove('hidden');
+                tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-6 text-red-400">Error loading quotas. Please try again.</td></tr>';
+                debugDiv.textContent = error.stack || error;
+                debugDiv.classList.remove('hidden');
+            }
+        }
+        document.addEventListener('DOMContentLoaded', fetchQuotas);
+    </script>
+</body>
+</html> 

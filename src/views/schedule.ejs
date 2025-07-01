@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <title>Scheduled Giveaways - Mutual Giveaway System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script>
+        // Theme toggle logic
+        document.addEventListener('DOMContentLoaded', function() {
+            const html = document.documentElement;
+            const themeBtn = document.getElementById('theme-toggle');
+            function setTheme(dark) {
+                if (dark) {
+                    html.classList.add('dark');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    html.classList.remove('dark');
+                    localStorage.setItem('theme', 'light');
+                }
+            }
+            // Default to dark
+            setTheme(localStorage.getItem('theme') !== 'light');
+            themeBtn.onclick = () => setTheme(!html.classList.contains('dark'));
+        });
+    </script>
+    <style>
+        body {
+            min-height: 100vh;
+            background: url('https://payhip.com/cdn-cgi/image/format=auto,width=1500/https://pe56d.s3.amazonaws.com/o_1inps6j3m1uvjf15o3fp61o3o10.png') no-repeat center center fixed;
+            background-size: cover;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+    <div class="w-full max-w-4xl min-h-[5vh] mx-auto p-10 flex flex-col items-center justify-center">
+        <div class="w-full flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+            <div>
+                <div class="text-3xl font-extrabold text-white mb-2 drop-shadow">Scheduled Giveaways</div>
+                <div class="flex flex-wrap gap-2">
+                    <a href="/dashboard" class="<%= page === 'dashboard' ? 'bg-blue-600 bg-opacity-80 text-white' : 'bg-gray-700 bg-opacity-80 text-white' %> rounded-full px-5 py-1 text-base font-semibold shadow hover:bg-blue-700 transition">Home</a>
+                    <a href="/pending" class="<%= page === 'pending' ? 'bg-blue-600 bg-opacity-80 text-white' : 'bg-gray-700 bg-opacity-80 text-white' %> rounded-full px-5 py-1 text-base font-semibold shadow hover:bg-gray-800 transition">Requests</a>
+                    <a href="/schedule" class="<%= page === 'schedule' ? 'bg-blue-600 bg-opacity-80 text-white' : 'bg-gray-700 bg-opacity-80 text-white' %> rounded-full px-5 py-1 text-base font-semibold shadow hover:bg-gray-800 transition">Schedule</a>
+                    <a href="/logs" class="<%= page === 'logs' ? 'bg-blue-600 bg-opacity-80 text-white' : 'bg-gray-700 bg-opacity-80 text-white' %> rounded-full px-5 py-1 text-base font-semibold shadow hover:bg-blue-700 transition">Logs</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scheduled Giveaways List -->
+        <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div>
+                <div class="text-2xl font-bold text-white mb-4">Everyone Pings</div>
+                <% let everyoneGiveaways = (scheduledGiveaways || []).filter(g => g.ourPing === 'Everyone').sort((a, b) => new Date(a.scheduledTime) - new Date(b.scheduledTime)); %>
+                <% if (everyoneGiveaways.length > 0) { %>
+                    <% everyoneGiveaways.forEach(giveaway => { %>
+                        <div class="bg-white bg-opacity-20 backdrop-blur-lg rounded-2xl shadow-2xl p-6 border border-white border-opacity-10 mb-4">
+                            <div class="flex flex-col gap-2">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="material-icons text-indigo-400">event</span>
+                                    <h3 class="text-xl font-semibold text-white"><%= giveaway.prize %></h3>
+                                </div>
+                                <div class="text-gray-200">
+                                    <p>Server: <%= giveaway.serverName %></p>
+                                    <p>Requester: <%= giveaway.requester || giveaway.requesterId || 'N/A' %></p>
+                                    <p>Our Ping: <%= giveaway.ourPing %></p>
+                                    <p>Their Ping: <%= giveaway.theirPing %></p>
+                                    <p>Scheduled for: <%= new Date(giveaway.scheduledTime).toLocaleString() %></p>
+                                </div>
+                                <div class="flex flex-row gap-2 mt-3">
+                                    <button onclick="sendNowGiveaway('<%= giveaway._id %>')" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-xl font-semibold transition">Send Now</button>
+                                    <button onclick="deleteGiveaway('<%= giveaway._id %>')" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl font-semibold transition">Delete</button>
+                                </div>
+                            </div>
+                        </div>
+                    <% }); %>
+                <% } else { %>
+                    <div class="bg-white bg-opacity-20 backdrop-blur-lg rounded-2xl shadow-2xl p-8 text-center">
+                        <span class="material-icons text-gray-400 text-5xl mb-4">event</span>
+                        <p class="text-gray-200 text-lg">No scheduled Everyone pings.</p>
+                    </div>
+                <% } %>
+            </div>
+            <div>
+                <div class="text-2xl font-bold text-white mb-4">Here Pings</div>
+                <% let hereGiveaways = (scheduledGiveaways || []).filter(g => g.ourPing === 'Here').sort((a, b) => new Date(a.scheduledTime) - new Date(b.scheduledTime)); %>
+                <% if (hereGiveaways.length > 0) { %>
+                    <% hereGiveaways.forEach(giveaway => { %>
+                        <div class="bg-white bg-opacity-20 backdrop-blur-lg rounded-2xl shadow-2xl p-6 border border-white border-opacity-10 mb-4">
+                            <div class="flex flex-col gap-2">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="material-icons text-indigo-400">event</span>
+                                    <h3 class="text-xl font-semibold text-white"><%= giveaway.prize %></h3>
+                                </div>
+                                <div class="text-gray-200">
+                                    <p>Server: <%= giveaway.serverName %></p>
+                                    <p>Requester: <%= giveaway.requester || giveaway.requesterId || 'N/A' %></p>
+                                    <p>Our Ping: <%= giveaway.ourPing %></p>
+                                    <p>Their Ping: <%= giveaway.theirPing %></p>
+                                    <p>Scheduled for: <%= new Date(giveaway.scheduledTime).toLocaleString() %></p>
+                                </div>
+                                <div class="flex flex-row gap-2 mt-3">
+                                    <button onclick="sendNowGiveaway('<%= giveaway._id %>')" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-xl font-semibold transition">Send Now</button>
+                                    <button onclick="deleteGiveaway('<%= giveaway._id %>')" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl font-semibold transition">Delete</button>
+                                </div>
+                            </div>
+                        </div>
+                    <% }); %>
+                <% } else { %>
+                    <div class="bg-white bg-opacity-20 backdrop-blur-lg rounded-2xl shadow-2xl p-8 text-center">
+                        <span class="material-icons text-gray-400 text-5xl mb-4">event</span>
+                        <p class="text-gray-200 text-lg">No scheduled Here pings.</p>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function approveGiveaway(id, isScheduled) {
+            try {
+                const response = await fetch(`/api/giveaways/${id}/approve`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ isScheduled })
+                });
+
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    console.error('Failed to approve giveaway');
+                }
+            } catch (error) {
+                console.error('Error approving giveaway:', error);
+            }
+        }
+
+        async function denyGiveaway(id) {
+            try {
+                const response = await fetch(`/api/giveaways/${id}/deny`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    console.error('Failed to deny giveaway');
+                }
+            } catch (error) {
+                console.error('Error denying giveaway:', error);
+            }
+        }
+
+        async function deleteGiveaway(id) {
+            if (!confirm('Are you sure you want to delete this scheduled giveaway?')) return;
+            try {
+                const response = await fetch(`/api/giveaways/${id}`, {
+                    method: 'DELETE'
+                });
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    alert('Failed to delete giveaway.');
+                }
+            } catch (error) {
+                alert('Error deleting giveaway.');
+            }
+        }
+
+        async function sendNowGiveaway(id) {
+            if (!confirm('Send this giveaway now? This will remove it from the schedule.')) return;
+            try {
+                const response = await fetch(`/api/giveaways/${id}/send-now`, {
+                    method: 'POST'
+                });
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    alert('Failed to send giveaway now.');
+                }
+            } catch (error) {
+                alert('Error sending giveaway now.');
+            }
+        }
+    </script>
+</body>
+</html> 

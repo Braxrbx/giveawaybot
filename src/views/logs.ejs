@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <title>Logs - Mutual Giveaway System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        body {
+            min-height: 100vh;
+            background: url('https://payhip.com/cdn-cgi/image/format=auto,width=1500/https://pe56d.s3.amazonaws.com/o_1inps6j3m1uvjf15o3fp61o3o10.png') no-repeat center center fixed;
+            background-size: cover;
+        }
+        .glass {
+            background: rgba(36, 39, 54, 0.65);
+            box-shadow: 0 4px 24px 0 rgba(31, 38, 135, 0.18);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 24px;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+    <div class="w-full max-w-4xl min-h-[5vh] mx-auto p-10 flex flex-col items-center justify-center">
+        <div class="w-full flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+            <div>
+                <div class="text-3xl font-extrabold text-white mb-2 drop-shadow">Logs</div>
+                <div class="flex flex-wrap gap-2">
+                    <a href="/dashboard" class="<%= page === 'dashboard' ? 'bg-blue-600 bg-opacity-80 text-white' : 'bg-gray-700 bg-opacity-80 text-white' %> rounded-full px-5 py-1 text-base font-semibold shadow hover:bg-blue-700 transition">Home</a>
+                    <a href="/pending" class="<%= page === 'pending' ? 'bg-blue-600 bg-opacity-80 text-white' : 'bg-gray-700 bg-opacity-80 text-white' %> rounded-full px-5 py-1 text-base font-semibold shadow hover:bg-gray-800 transition">Requests</a>
+                    <a href="/schedule" class="<%= page === 'schedule' ? 'bg-blue-600 bg-opacity-80 text-white' : 'bg-gray-700 bg-opacity-80 text-white' %> rounded-full px-5 py-1 text-base font-semibold shadow hover:bg-gray-800 transition">Schedule</a>
+                    <a href="/logs" class="<%= page === 'logs' ? 'bg-blue-600 bg-opacity-80 text-white' : 'bg-gray-700 bg-opacity-80 text-white' %> rounded-full px-5 py-1 text-base font-semibold shadow hover:bg-blue-700 transition">Logs</a>
+                </div>
+            </div>
+        </div>
+        <div class="glass w-full p-8 rounded-2xl shadow-2xl border border-white border-opacity-10">
+            <div class="text-xl font-semibold mb-4 text-white flex items-center gap-2"><span class="material-icons text-indigo-400">history</span> Recent Actions</div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-sm text-left text-gray-200">
+                    <thead>
+                        <tr>
+                            <th class="px-4 py-2">Action</th>
+                            <th class="px-4 py-2">User</th>
+                            <th class="px-4 py-2">Details</th>
+                            <th class="px-4 py-2">Time</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logsTable">
+                        <tr><td colspan="4" class="text-center py-6 text-gray-400">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script>
+        async function loadLogs() {
+            const res = await fetch('/api/logs');
+            const logs = await res.json();
+            const table = document.getElementById('logsTable');
+            if (!Array.isArray(logs) || logs.length === 0) {
+                table.innerHTML = '<tr><td colspan="4" class="text-center py-6 text-gray-400">No logs found.</td></tr>';
+                return;
+            }
+            table.innerHTML = logs.map(log => `
+                <tr>
+                    <td class="px-4 py-2 font-bold ${log.action === 'approve' ? 'text-green-400' : log.action === 'deny' ? 'text-red-400' : 'text-gray-200'}">${log.action.charAt(0).toUpperCase() + log.action.slice(1)}</td>
+                    <td class="px-4 py-2">${log.username || log.userId}</td>
+                    <td class="px-4 py-2">${log.details || ''}</td>
+                    <td class="px-4 py-2">${new Date(log.timestamp).toLocaleString()}</td>
+                </tr>
+            `).join('');
+        }
+        document.addEventListener('DOMContentLoaded', loadLogs);
+    </script>
+</body>
+</html> 

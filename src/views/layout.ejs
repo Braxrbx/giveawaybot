@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title><%= title %> - Mutual Giveaway System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        body {
+            min-height: 100vh;
+            background: url('https://payhip.com/cdn-cgi/image/format=auto,width=1500/https://pe56d.s3.amazonaws.com/o_1inps6j3m1uvjf15o3fp61o3o10.png') center center/cover no-repeat;
+            position: relative;
+        }
+        .bg-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(30, 41, 59, 0.65);
+            z-index: 0;
+            pointer-events: none;
+        }
+        .dashboard-glass {
+            background: rgba(255,255,255,0.18);
+            box-shadow: 0 8px 32px 0 rgba(31,38,135,0.20);
+            backdrop-filter: blur(24px);
+            border-radius: 2.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-overlay"></div>
+    <div class="flex min-h-screen items-center justify-center relative z-10">
+        <!-- Floating Sidebar (vertically centered, overlays left edge of dashboard card) -->
+        <!-- Main Dashboard Card (centered, fixed max width, starts/ends at blue lines) -->
+        <div class="flex flex-col items-center justify-center w-full" style="max-width: 1200px; margin-left: 96px; margin-right: 0;">
+            <main class="dashboard-glass w-full min-h-[80vh] p-14 rounded-3xl shadow-xl">
+                <%- body %>
+            </main>
+        </div>
+    </div>
+</body>
+</html> 

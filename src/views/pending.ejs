@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <title>Pending Giveaways - Mutual Giveaway System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script>
+        // Theme toggle logic
+        document.addEventListener('DOMContentLoaded', function() {
+            const html = document.documentElement;
+            const themeBtn = document.getElementById('theme-toggle');
+            function setTheme(dark) {
+                if (dark) {
+                    html.classList.add('dark');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    html.classList.remove('dark');
+                    localStorage.setItem('theme', 'light');
+                }
+            }
+            // Default to dark
+            setTheme(localStorage.getItem('theme') !== 'light');
+            themeBtn.onclick = () => setTheme(!html.classList.contains('dark'));
+        });
+    </script>
+    <style>
+        body {
+            min-height: 100vh;
+            background: url('https://payhip.com/cdn-cgi/image/format=auto,width=1500/https://pe56d.s3.amazonaws.com/o_1inps6j3m1uvjf15o3fp61o3o10.png') no-repeat center center fixed;
+            background-size: cover;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+    <div class="w-full max-w-4xl min-h-[5vh] mx-auto p-10 flex flex-col items-center justify-center">
+        <div class="w-full flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+            <div>
+                <div class="text-3xl font-extrabold text-white mb-2 drop-shadow">Pending Giveaways</div>
+                <div class="flex flex-wrap gap-2">
+                    <a href="/dashboard" class="<%= page === 'dashboard' ? 'bg-blue-600 bg-opacity-80 text-white' : 'bg-gray-700 bg-opacity-80 text-white' %> rounded-full px-5 py-1 text-base font-semibold shadow hover:bg-blue-700 transition">Home</a>
+                    <a href="/pending" class="<%= page === 'pending' ? 'bg-blue-600 bg-opacity-80 text-white' : 'bg-gray-700 bg-opacity-80 text-white' %> rounded-full px-5 py-1 text-base font-semibold shadow hover:bg-gray-800 transition">Requests</a>
+                    <a href="/schedule" class="<%= page === 'schedule' ? 'bg-blue-600 bg-opacity-80 text-white' : 'bg-gray-700 bg-opacity-80 text-white' %> rounded-full px-5 py-1 text-base font-semibold shadow hover:bg-gray-800 transition">Schedule</a>
+                    <a href="/logs" class="<%= page === 'logs' ? 'bg-blue-600 bg-opacity-80 text-white' : 'bg-gray-700 bg-opacity-80 text-white' %> rounded-full px-5 py-1 text-base font-semibold shadow hover:bg-blue-700 transition">Logs</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Giveaways List -->
+        <div class="w-full space-y-4">
+            <% if (pendingGiveaways && pendingGiveaways.length > 0) { %>
+                <% pendingGiveaways.forEach(function(giveaway, idx) { %>
+                    <div class="bg-white bg-opacity-20 backdrop-blur-lg rounded-2xl shadow-2xl p-6 border border-white border-opacity-10 hover:scale-105 transition-transform duration-200">
+                        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="material-icons text-yellow-400">hourglass_empty</span>
+                                    <h3 class="text-xl font-semibold text-white"><%= giveaway.prize %></h3>
+                                </div>
+                                <div class="text-gray-200">
+                                    <p>Server: <%= giveaway.serverName %></p>
+                                    <p>Requester: <%= giveaway.requester || giveaway.requesterId || 'N/A' %></p>
+                                    <p>Our Ping: <%= giveaway.ourPing %></p>
+                                    <p>Their Ping: <%= giveaway.theirPing %></p>
+                                </div>
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <button onclick="showDetails(<%= idx %>)" class="bg-gray-700 hover:bg-gray-800 text-white px-6 py-2 rounded-xl font-semibold transition">Details</button>
+                                <button onclick="approveGiveaway('<%= giveaway._id %>', false)" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-xl font-semibold transition">Approve</button>
+                                <button onclick="denyGiveaway('<%= giveaway._id %>')" class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-xl font-semibold transition">Deny</button>
+                            </div>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <div class="bg-white bg-opacity-20 backdrop-blur-lg rounded-2xl shadow-2xl p-8 text-center">
+                    <span class="material-icons text-gray-400 text-5xl mb-4">inbox</span>
+                    <p class="text-gray-200 text-lg">No pending giveaways at the moment.</p>
+                </div>
+            <% } %>
+        </div>
+    </div>
+
+    <!-- Modal and Notification -->
+    <div id="modalBg" class="fixed inset-0 bg-black bg-opacity-60 rounded-3xl flex items-center justify-center z-50" style="display:none;">
+        <div id="modalContent" class="bg-[#181c24] bg-opacity-0 backdrop-blur-xl rounded-3xl shadow-2xl p-10 min-w-[340px] max-w-[95vw] text-white relative border border-white border-opacity-10">
+            <!-- Modal content will be injected here -->
+        </div>
+    </div>
+    <div id="denyModalBg" class="fixed inset-0 bg-black bg-opacity-60 rounded-3xl flex items-center justify-center z-50" style="display:none;">
+        <div id="denyModalContent" class="bg-[#181c24] bg-opacity-0 backdrop-blur-xl rounded-3xl shadow-2xl p-8 min-w-[340px] max-w-[95vw] text-white relative border border-white border-opacity-10 flex flex-col items-center">
+            <div class="text-2xl font-bold mb-4">Deny Giveaway</div>
+            <div class="w-full mb-4">
+                <label for="denyReasonInput" class="block mb-2 text-lg font-semibold">Reason for denial:</label>
+                <input id="denyReasonInput" type="text" class="w-full px-4 py-2 rounded-xl bg-white bg-opacity-10 text-white border border-white border-opacity-20 focus:outline-none focus:ring-2 focus:ring-red-400" placeholder="Enter reason...">
+            </div>
+            <div class="flex gap-3 w-full justify-end">
+                <button onclick="closeDenyModal()" class="bg-gray-700 hover:bg-gray-800 text-white px-6 py-2 rounded-xl font-semibold transition">Cancel</button>
+                <button id="denySubmitBtn" class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-xl font-semibold transition">Deny</button>
+            </div>
+        </div>
+    </div>
+    <div id="notification" class="fixed bottom-6 right-6 bg-gray-900 text-white px-6 py-3 rounded-xl shadow-lg z-50" style="display:none;"></div>
+
+    <script>
+        const giveawaysCache = <%- JSON.stringify(pendingGiveaways) %>;
+        let selectedGiveaway = null;
+        let denyGiveawayId = null;
+
+        function showDetails(idx) {
+            selectedGiveaway = giveawaysCache[idx];
+            const modal = document.getElementById('modalContent');
+            const bg = document.getElementById('modalBg');
+            modal.innerHTML = `
+                <div class='text-2xl font-bold mb-4'>Giveaway Details</div>
+                <div class='space-y-2 mb-6'>
+                    <div><b>Server Name:</b> ${selectedGiveaway.serverName}</div>
+                    <div><b>Requester:</b> ${selectedGiveaway.requester || selectedGiveaway.requesterId || 'N/A'}</div>
+                    <div><b>Prize:</b> ${selectedGiveaway.prize || selectedGiveaway.theirPrize || ''}</div>
+                    <div><b>Server Link:</b> ${selectedGiveaway.serverInvite ? `<a href='${selectedGiveaway.serverInvite}' target='_blank' class='text-blue-400 underline'>${selectedGiveaway.serverInvite}</a>` : 'N/A'}</div>
+                    <div><b>Server Member Count:</b> ${selectedGiveaway.serverMemberCount || 'N/A'}</div>
+                    <div><b>Our Ping:</b> <span class='break-all'>${selectedGiveaway.ourPing || 'N/A'}</span></div>
+                    <div><b>Their Ping:</b> <span class='break-all'>${selectedGiveaway.theirPing || 'N/A'}</span></div>
+                </div>
+                <div class='flex flex-col gap-2'>
+                    <button onclick="approveGiveaway('${selectedGiveaway._id}', false, true)" class='bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-xl font-semibold transition'>Approve</button>
+                    <button onclick="openDenyModal('${selectedGiveaway._id}')" class='bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-xl font-semibold transition'>Deny</button>
+                    <button onclick='closeModal()' class='bg-gray-700 hover:bg-gray-800 text-white px-6 py-2 rounded-xl font-semibold transition'>Close</button>
+                </div>
+            `;
+            bg.style.display = 'flex';
+        }
+        function closeModal() {
+            document.getElementById('modalBg').style.display = 'none';
+        }
+        function showNotification(msg) {
+            const notif = document.getElementById('notification');
+            notif.textContent = msg;
+            notif.style.display = 'block';
+            setTimeout(() => { notif.style.display = 'none'; }, 2500);
+        }
+        function openDenyModal(id) {
+            denyGiveawayId = id;
+            document.getElementById('denyReasonInput').value = '';
+            document.getElementById('denyModalBg').style.display = 'flex';
+        }
+        function closeDenyModal() {
+            document.getElementById('denyModalBg').style.display = 'none';
+        }
+        document.getElementById('denySubmitBtn').onclick = async function() {
+            const reason = document.getElementById('denyReasonInput').value.trim();
+            if (!reason) {
+                showNotification('Please enter a reason.');
+                return;
+            }
+            try {
+                const response = await fetch(`/api/giveaways/${denyGiveawayId}/deny`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reason })
+                });
+                if (response.ok) {
+                    showNotification('Giveaway denied.');
+                    closeDenyModal();
+                    closeModal();
+                    setTimeout(() => window.location.reload(), 1200);
+                } else {
+                    showNotification('Failed to deny giveaway');
+                }
+            } catch (error) {
+                showNotification('Error denying giveaway.');
+            }
+        };
+        async function approveGiveaway(id, isScheduled, fromModal) {
+            try {
+                const response = await fetch(`/api/giveaways/${id}/approve`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ isScheduled })
+                });
+                if (response.ok) {
+                    showNotification('Giveaway approved!');
+                    if (fromModal) closeModal();
+                    setTimeout(() => window.location.reload(), 1200);
+                } else {
+                    showNotification('Failed to approve giveaway');
+                }
+            } catch (error) {
+                showNotification('Error approving giveaway.');
+            }
+        }
+        async function denyGiveaway(id, fromModal) {
+            openDenyModal(id);
+        }
+    </script>
+</body>
+</html> 

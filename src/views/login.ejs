@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <title>Login - Mutual Giveaway System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        body {
+            min-height: 100vh;
+            background: url('https://payhip.com/cdn-cgi/image/format=auto,width=1500/https://pe56d.s3.amazonaws.com/o_1inps6j3m1uvjf15o3fp61o3o10.png') no-repeat center center fixed;
+            background-size: cover;
+        }
+        .glass {
+            background: rgba(36, 39, 54, 0.65);
+            box-shadow: 0 4px 24px 0 rgba(31, 38, 135, 0.18);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 24px;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+    <div class="glass max-w-md w-full p-10 flex flex-col items-center justify-center border border-white border-opacity-10">
+        <div class="text-3xl font-extrabold text-white mb-4 drop-shadow flex items-center gap-2">
+            <span class="material-icons text-indigo-400">lock</span>
+            Login
+        </div>
+        <% if (user && !user.hasRequiredRole) { %>
+            <div class="bg-red-500 bg-opacity-20 text-red-200 rounded-xl px-4 py-3 mb-4 text-center">
+                You do not have the required role to access the dashboard.<br>
+                <a href="/logout" class="inline-block mt-3 bg-gray-700 hover:bg-gray-800 text-white px-6 py-2 rounded-xl font-semibold transition">Logout</a>
+            </div>
+        <% } else if (!user) { %>
+            <a href="/auth/discord" class="flex items-center gap-3 bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-2xl font-bold text-lg shadow-lg transition mb-2">
+                <img src="https://cdn-icons-png.flaticon.com/512/2111/2111370.png" alt="Discord" class="w-7 h-7"> Login with Discord
+            </a>
+        <% } else { %>
+            <div class="text-green-400 text-lg font-semibold mb-2">You are logged in!</div>
+            <a href="/dashboard" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl font-semibold transition">Go to Dashboard</a>
+        <% } %>
+    </div>
+</body>
+</html> 
